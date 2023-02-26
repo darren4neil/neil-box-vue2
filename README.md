@@ -1,13 +1,13 @@
-﻿### 简介
-*Vue 2.6.10
-
-### 项目运行
+﻿# Vue2 Project
+## Project setup
 ```
 npm install
 ```
-
+## Compiles and hot-reloads for development
 ```
 npm run serve
 ```
-
-### 路由动态加载
+## Compiles and minifies for production
+```
+npm run build
+```
