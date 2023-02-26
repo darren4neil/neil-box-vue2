@@ -1,8 +1,5 @@
-# This is a basic workflow to help you get started with Actions
+﻿name: CI
 
-name: CI
-
-# Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -31,13 +28,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 16
           cache: npm
 
       - name: Install Deps
         run: npm ci
 
-      - name: Build Docs
+      - name: Build 
         env:
           NODE_OPTIONS: --max_old_space_size=8192
         run: |-
