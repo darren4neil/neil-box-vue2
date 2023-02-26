@@ -26,6 +26,7 @@ import store from '@/store'
 
 
 const router= new Router({
+  base: process.env.NODE_ENV === "production" ? '/vue-template-box/' : "",
   routes: [
     {
       path : '/', 
