@@ -44,10 +44,14 @@ jobs:
           touch .nojekyll
 
       - name: Deploy GithubPages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          token: ${{ secrets.ACCESS_TOKEN }}
-          repository-name: darren4neil/vue-template-box
-          branch: gh-pages
-          folder: dist
-          force: true
+          uses: JamesIves/github-pages-deploy-action@v4.3.3
+          with:
+                  branch: gh-pages # 部署后提交到那个分支
+                  folder: dist # 这里填打包好的目录名称
+ #      uses: JamesIves/github-pages-deploy-action@v4
+ #       with:
+ #         token: ${{ secrets.ACCESS_TOKEN }}
+ #         repository-name: darren4neil/vue-template-box
+ #         branch: gh-pages
+ #         folder: dist
+ #         force: true
