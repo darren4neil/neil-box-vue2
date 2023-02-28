@@ -1,18 +1,24 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router/index.js'
-import axios from 'axios';
-import VueAxios from 'vue-axios';
-Vue.use(VueAxios,axios);
+import Vue from 'vue';
+import App from './App.vue';
+import router from './router';
+import store from './store';
 
-// 导入
-import store from './store/index.js'
-// 挂载到Vue实力上，全局可通过this.$store进行调用
-Vue.prototype.$store = store
+import Particles from 'vue-particles';
+import Element from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+import '@/theme/index.scss';
+import { i18n } from '@/i18n/index.js';
+import { globalComponentSize } from '@/utils/componentSize.js';
 
-Vue.config.productionTip = false
+Vue.use(Particles);
+Vue.use(Element, { i18n: (key, value) => i18n.t(key, value), size: globalComponentSize });
+
+Vue.config.productionTip = false;
+Vue.prototype.bus = new Vue();
 
 new Vue({
-	router: router,   //加上这句
-	render: h => h(App),
-}).$mount('#app')
+	router,
+	store,
+	i18n,
+	render: (h) => h(App),
+}).$mount('#app');

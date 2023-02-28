@@ -1,131 +1,275 @@
-// 引入路由模块
-import Vue from 'vue'
-import Router from 'vue-router'
-import Cookies from "js-cookie"
+import Vue from 'vue';
+import store from '../store';
+import VueRouter from 'vue-router';
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
+import { Session } from '@/utils/storage';
+import { PrevLoading } from '@/utils/loading.js';
+import { useMenuApi } from '@/api/menu';
 
-// 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
-const originalPush = Router.prototype.push
-Router.prototype.push = function push(location) {
-  return originalPush.call(this, location).catch(err => err)
+const menuApi = useMenuApi();
+
+// 解决 `element ui` 导航栏重复点菜单报错问题
+const originalPush = VueRouter.prototype.push;
+VueRouter.prototype.push = function push(location) {
+	return originalPush.call(this, location).catch((err) => err);
+};
+
+// 安装 VueRouter 插件
+Vue.use(VueRouter);
+
+// 定义动态路由
+const dynamicRoutes = [
+	{
+		path: '/',
+		name: '/',
+		component: 'layout/index',
+		redirect: '/home',
+		meta: {
+			isKeepAlive: true,
+		},
+		children: [],
+	},
+];
+
+// 定义静态路由
+const staticRoutes = [
+	{
+		path: '/login',
+		name: 'login',
+		component: () => import('@/views/login'),
+		meta: {
+			title: '登录',
+		},
+	},
+	{
+		path: '/404',
+		name: 'notFound',
+		component: () => import('@/views/error/404.vue'),
+		meta: {
+			title: 'message.staticRoutes.notFound',
+		},
+	},
+	{
+		path: '/401',
+		name: 'noPower',
+		component: () => import('@/views/error/401.vue'),
+		meta: {
+			title: 'message.staticRoutes.noPower',
+		},
+	},
+];
+
+// 加载静态路由
+const createRouter = () =>
+	new VueRouter({
+		routes: staticRoutes,
+	});
+
+// 创建路由
+const router = createRouter();
+
+// 加载 loading
+PrevLoading.start();
+
+// 多级嵌套数组处理成一维数组
+export function formatFlatteningRoutes(arr) {
+	if (arr.length <= 0) return false;
+	for (let i = 0; i < arr.length; i++) {
+		if (arr[i].children) {
+			arr = arr.slice(0, i + 1).concat(arr[i].children, arr.slice(i + 1));
+		}
+	}
+	return arr;
 }
 
-//使用路由模块
-Vue.use(Router)
+// 处理 tagsViewList 数据，默认路由全部缓存
+// isKeepAlive 处理 `name` 值，进行路由缓存
+export function formatTwoStageRoutes(arr) {
+	if (arr.length <= 0) return false;
+	const newArr = [];
+	const cacheList = [];
+	arr.forEach((v) => {
+		newArr.push({ ...v });
+		cacheList.push(v.name);
+		store.dispatch('keepAliveNames/setCacheKeepAlive', cacheList);
+	});
+	return newArr;
+}
 
-//引入elementui
-import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
-//使用elementui
-Vue.use(ElementUI)
+// 判断路由 meta.roles 中是否包含当前登录用户权限字段
+export function hasAuth(roles, route) {
+	if (route.meta && route.meta.roles) return roles.some((role) => route.meta.roles.includes(role));
+	else return true;
+}
 
-import  {menuTreeData}  from '../menu/menu'
+// 递归过滤有权限的路由
+export function setFilterMenuFun(routes, role) {
+	const menu = [];
+	routes.forEach((route) => {
+		const item = { ...route };
+		if (hasAuth(role, item)) {
+			if (item.children) item.children = setFilterMenuFun(item.children, role);
+			menu.push(item);
+		}
+	});
+	return menu;
+}
 
-import Login from '../Login/Login.vue'
-import Home from '../menu/HomeVue'
-import store from '@/store'
+// 缓存多级嵌套数组处理后的一维数组(tagsView、菜单搜索中使用：未过滤隐藏的(isHide))
+export function setCacheTagsViewRoutes(arr) {
+	// 先处理有权限的路由，否则 tagsView、菜单搜索中无权限的路由也将显示
+	let rolesRoutes = setFilterMenuFun(arr, store.state.userInfos.userInfos.roles);
+	// 添加到 vuex setTagsViewRoutes 中
+	store.dispatch('tagsViewRoutes/setTagsViewRoutes', formatTwoStageRoutes(formatFlatteningRoutes(rolesRoutes)));
+}
 
+// 递归处理多余的 layout : <router-view>，让需要访问的组件保持在第一层 layout 层。
+// 因为 `keep-alive` 只能缓存二级路由
+// 默认初始化时就执行
+export function keepAliveSplice(to) {
+	if (to.matched && to.matched.length > 2) {
+		to.matched.map((v, k) => {
+			if (v.components.default instanceof Function) {
+				v.components.default().then((components) => {
+					if (components.default.name === 'parent') {
+						to.matched.splice(k, 1);
+						router.push({ path: to.path, query: to.query });
+						keepAliveSplice(to);
+					}
+				});
+			} else {
+				if (v.components.default.name === 'parent') {
+					to.matched.splice(k, 1);
+					keepAliveSplice(to);
+				}
+			}
+		});
+	}
+}
 
-const router= new Router({
-  base: process.env.NODE_ENV === "production" ? '/vue-template-box/' : "",
-  routes: [
-    {
-      path : '/', 
-      name : 'Home',
-      component :  Home,
-      children :[
-      ]
-    },
-    {
-      path : '/Login', 
-      name : 'Login',
-      component :  Login
-    }
-    
-  ]
-})
+// 处理后端返回的 `component` 路径，拼装实现懒加载
+export function loadView(path) {
+	/**
+	 * 打包成一个 js、一个 css
+	 */
+	// if (path.indexOf('layout') > -1) return () => Promise.resolve(require(`@/${path}`));
+	// else return () => Promise.resolve(require(`@/views/${path}`));
 
+	/**
+	 * 打包成多个 js、多个 css
+	 */
+	if (path.indexOf('layout') > -1) return () => import(`@/${path}`);
+	else return () => import(`@/views/${path}`);
+}
+
+// 递归处理每一项 `component` 中的路径
+export function dynamicRouter(routes) {
+	return routes.map((view) => {
+		if (view.component) view.component = loadView(view.component);
+		if (view.children) dynamicRouter(view.children);
+		return view;
+	});
+}
+
+// 添加路由，模拟数据与方法，可自行进行修改 admin
+// 添加动态路由，`{ path: '*', redirect: '/404' }` 防止页面刷新，静态路由丢失问题
+// next({ ...to, replace: true }) 动态路由 addRoute 完毕后才放行，防止刷新时 NProgress 进度条加载2次
+// 文档地址：https://router.vuejs.org/zh/api/#router-addroutes
+export function adminUser(router, to, next) {
+	resetRouter();
+	menuApi
+		.getMenuAdmin()
+		.then(async (res) => {
+			// 读取用户信息，获取对应权限进行判断
+			store.dispatch('userInfos/setUserInfos');
+			store.dispatch('routesList/setRoutesList', setFilterMenuFun(res.data, store.state.userInfos.userInfos.roles));
+			dynamicRoutes[0].children = res.data;
+			const awaitRoute = await dynamicRouter(dynamicRoutes);
+			[...awaitRoute, { path: '*', redirect: '/404' }].forEach((route) => {
+				router.addRoute({ ...route });
+			});
+			setCacheTagsViewRoutes(JSON.parse(JSON.stringify(res.data)));
+			next({ ...to, replace: true });
+		})
+		.catch(() => {});
+}
+
+// 添加路由，模拟数据与方法，可自行进行修改 test
+// 添加动态路由，`{ path: '*', redirect: '/404' }` 防止页面刷新，静态路由丢失问题
+export function testUser(router, to, next) {
+	resetRouter();
+	menuApi
+		.getMenuTest()
+		.then(async (res) => {
+			// 读取用户信息，获取对应权限进行判断
+			store.dispatch('userInfos/setUserInfos');
+			store.dispatch('routesList/setRoutesList', setFilterMenuFun(res.data, store.state.userInfos.userInfos.roles));
+			dynamicRoutes[0].children = res.data;
+			const awaitRoute = await dynamicRouter(dynamicRoutes);
+			[...awaitRoute, { path: '*', redirect: '/404' }].forEach((route) => {
+				router.addRoute({ ...route });
+			});
+			setCacheTagsViewRoutes(JSON.parse(JSON.stringify(res.data)));
+			next({ ...to, replace: true });
+		})
+		.catch(() => {});
+}
+
+// 重置路由
+export function resetRouter() {
+	router.matcher = createRouter().matcher;
+}
+
+// 延迟关闭进度条
+export function delayNProgressDone(time = 300) {
+	setTimeout(() => {
+		NProgress.done();
+	}, time);
+}
+
+// 动态加载后端返回路由路由(模拟数据)
+export function getRouterList(router, to, next) {
+	if (!Session.get('userInfo')) return false;
+	if (Session.get('userInfo').userName === 'admin') adminUser(router, to, next);
+	else if (Session.get('userInfo').userName === 'test') testUser(router, to, next);
+}
+
+// 路由加载前
 router.beforeEach((to, from, next) => {
-  // 登录界面登录成功之后，会把用户信息保存在会话
-  // 存在时间为会话生命周期，页面关闭即失效。
-  let token = Cookies.get('token')
-  let userName = sessionStorage.getItem('user')
-  if (to.path === '/Login') {
-    // 如果是访问登录界面，如果用户会话信息存在，代表已登录过，跳转到主页
-    if (token) {
-      next({
-        path: '/'
-      })
-    } else {
-      next()
-    }
-  } else {
-    if (!token) {
-      // 如果访问非登录界面，且户会话信息不存在，代表未登录，则跳转到登录界面
-      console.log("登录界面")
-      next({
-        path: '/Login'
-      })
-    } else if(!store.state.menu.routeLoaded){
-      // 加载动态菜单和路由
-      addDynamicMenuAndRoutes(userName);
-      //坑：直接使用next()刷新后会一直白屏
-      next({ ...to,replace:true});
-    }
-    else{
-      next();
-    }
-  }
-})
+	keepAliveSplice(to);
+	NProgress.configure({ showSpinner: false });
+	if (to.meta.title && to.path !== '/login') NProgress.start();
+	let token = Session.get('token');
+	if (to.path === '/login' && !token) {
+		NProgress.start();
+		next();
+		delayNProgressDone();
+	} else {
+		if (!token) {
+			NProgress.start();
+			next('/login');
+			Session.clear();
+			delayNProgressDone();
+		} else if (token && to.path === '/login') {
+			next('/home');
+			delayNProgressDone();
+		} else {
+			if (Object.keys(store.state.routesList.routesList).length <= 0) {
+				getRouterList(router, to, next);
+			} else {
+				next();
+				delayNProgressDone(0);
+			}
+		}
+	}
+});
 
-function addDynamicMenuAndRoutes(userName){
-  let dynamicRouters=addDynamicRoutes(menuTreeData);
-  //将路由添加到Home的children中去
-  router.options.routes[0].children=router.options.routes[0].children.concat(dynamicRouters)
-  //添加到路由（因版本问题，可能写成router.addRoutes,多一个s）
-  router.addRoute(router.options.routes[0]);
-  // 保存加载状态
-  store.commit('routeLoaded', true);
-  // 保存菜单树
-  store.commit('menus', menuTreeData);
-  console.log("路由加载");
-}
+// 路由加载后
+router.afterEach(() => {
+	PrevLoading.done();
+	delayNProgressDone();
+});
 
-function addDynamicRoutes(menuList=[],routes=[]){
-  //用于筛选出最底层的children 
-  var temp = [];
-  for (let i = 0; i < menuList.length; i++) {
-     //判断children 是否存在
-    if (menuList[i].children && menuList[i].children.length >= 1) {
-      temp = temp.concat(menuList[i].children)
-      //判断地址是否正确
-    }else if (menuList[i].route && /\S/.test(menuList[i].route)) {
-      //menuList[i].route = menuList[i].route.replace(/^\//, '');
-      // 创建路由配置
-      //踩坑记1：必须要写成@/views/${变量}
-      //踩坑记2：${变量}，这个“变量”不要用另一个变量接收，以免造成浅拷贝，使得变量的值改变
-      var reg2 = /([^/]+)$/;
-      var route = {
-        path: menuList[i].route,
-        name: menuList[i].menuName,
-        component: resolve => require([`@/views/${menuList[i].route.match(reg2)[1]}.vue`], resolve),
-        meta: {
-          icon: menuList[i].icon,
-          index: menuList[i].menuId
-        }
-      }
-      routes.push(route);
-    }
-  }
-  //将筛选出来的children进行重复调用
-  if (temp.length >= 1) {
-    addDynamicRoutes(temp, routes)
-  } else {
-    console.log('动态路由加载...')
-    console.log(routes)
-    console.log('动态路由加载完成.')
-  }
-  return routes
-}
-
-
-export default router
+// 导出路由
+export default router;
