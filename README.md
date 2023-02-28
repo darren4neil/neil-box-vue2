@@ -1,4 +1,5 @@
-﻿# Vue2 Project
+﻿# A Vue2 Project
+
 ## Project setup
 ```
 npm install
@@ -11,3 +12,5 @@ npm run serve
 ```
 npm run build
 ```
+# Demo
+....
