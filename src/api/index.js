@@ -1,34 +1,71 @@
 import axios from 'axios'
+// import Qs from 'qs'
+import router from '@/router/index'
+import store from '@/store/index'
+import { Message } from 'element-ui'
 
-axios.defaults.withCredentials = true;
-
-// 添加一个响应拦截器
-axios.interceptors.response.use(function (response) {
-	return response;
-}, function (error) {
-	return Promise.reject(error);
-});
-
-//基地址
-let base = 'http://localhost:8022';  //接口代理地址参见：config/index.js中的proxyTable配置
-
-//通用方法
-export const POST = (url, params) => {
-  return axios.post(`${base}${url}`, params).then(res => res.data)
+const toLogin = () => {
+    router.push({
+        path: '/login',
+        query: {
+            redirect: router.currentRoute.fullPath
+        }
+    })
 }
 
-export const GET = (url, params) => {
-  return axios.get(`${base}${url}`, {params: params}).then(res => res.data)
-}
+const api = axios.create({
+    baseURL: process.env.VUE_APP_API_ROOT,
+    timeout: 10000,
+    responseType: 'json'
+    // withCredentials: true
+})
 
-export const PUT = (url, params) => {
-  return axios.put(`${base}${url}`, params).then(res => res.data)
-}
+api.interceptors.request.use(
+    request => {
+        if (request.method == 'post') {
+            if (request.data instanceof FormData) {
+                if (store.getters['user/isLogin']) {
+                    // 如果是 FormData 类型（上传图片）
+                    request.data.append('token', store.state.user.token)
+                }
+            } else {
+                // 带上 token
+                if (request.data == undefined) {
+                    request.data = {}
+                }
+                if (store.getters['user/isLogin']) {
+                    request.data.token = store.state.user.token
+                }
+                // request.data = Qs.stringify(request.data)
+            }
+        } else {
+            // 带上 token
+            if (request.params == undefined) {
+                request.params = {}
+            }
+            if (store.getters['user/isLogin']) {
+                request.params.token = store.state.user.token
+            }
+        }
+        return request
+    }
+)
 
-export const DELETE = (url, params) => {
-  return axios.delete(`${base}${url}`, {params: params}).then(res => res.data)
-}
+api.interceptors.response.use(
+    response => {
+        if (response.data.error != '') {
+            // 如果接口请求时发现 token 失效，则立马跳转到登录页
+            if (response.data.status == 0) {
+                toLogin()
+            }
+            Message.error(response.data.error)
+            return Promise.reject(response.data)
+        }
+        return Promise.resolve(response.data)
+    },
+    error => {
+        return Promise.reject(error)
+    }
+)
 
-export const PATCH = (url, params) => {
-  return axios.patch(`${base}${url}`, params).then(res => res.data)
-}
+export default api

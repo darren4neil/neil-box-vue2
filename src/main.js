@@ -1,18 +1,46 @@
 import Vue from 'vue'
 import App from './App.vue'
-import router from './router/index.js'
-import axios from 'axios';
-import VueAxios from 'vue-axios';
-Vue.use(VueAxios,axios);
+import router from './router/index'
+import store from './store/index'
 
-// 导入
-import store from './store/index.js'
-// 挂载到Vue实力上，全局可通过this.$store进行调用
-Vue.prototype.$store = store
+import api from './api'
+Vue.prototype.$api = api
+
+import dayjs from 'dayjs'
+Vue.prototype.$dayjs = dayjs
+
+import auth from './util/auth'
+Vue.use(auth)
+
+import cookies from 'vue-cookies'
+Vue.use(cookies)
+
+import VueMeta from 'vue-meta'
+Vue.use(VueMeta)
+
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+Vue.use(ElementUI)
+
+import hotkeys from 'hotkeys-js'
+Vue.prototype.$hotkeys = hotkeys
+
+// 全局组件自动注册
+import './components/autoRegister'
+
+// 自动加载 svg 图标
+const req = require.context('./assets/icons', false, /\.svg$/)
+const requireAll = requireContext => requireContext.keys().map(requireContext)
+requireAll(req)
+
+import './assets/styles/reset.scss'
+
+import './mock'
 
 Vue.config.productionTip = false
 
-new Vue({
-	router: router,   //加上这句
-	render: h => h(App),
+Vue.prototype.$eventBus = new Vue({
+    router,
+    store,
+    render: h => h(App)
 }).$mount('#app')

@@ -1,131 +1,177 @@
-// 引入路由模块
 import Vue from 'vue'
-import Router from 'vue-router'
-import Cookies from "js-cookie"
+import VueRouter from 'vue-router'
+import store from '@/store/index'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css' // progress bar style
 
-// 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
-const originalPush = Router.prototype.push
-Router.prototype.push = function push(location) {
-  return originalPush.call(this, location).catch(err => err)
-}
+Vue.use(VueRouter)
 
-//使用路由模块
-Vue.use(Router)
+import Layout from '@/layout'
+import EmptyLayout from '@/layout/empty'
 
-//引入elementui
-import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
-//使用elementui
-Vue.use(ElementUI)
-
-import  {menuTreeData}  from '../menu/menu'
-
-import Login from '../Login/Login.vue'
-import Home from '../menu/HomeVue'
-import store from '@/store'
-
-
-const router= new Router({
-  base: process.env.NODE_ENV === "production" ? '/vue-template-box/' : "",
-  routes: [
+const constantRoutes = [
     {
-      path : '/', 
-      name : 'Home',
-      component :  Home,
-      children :[
-      ]
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/login'),
+        meta: {
+            title: '登录'
+        }
     },
     {
-      path : '/Login', 
-      name : 'Login',
-      component :  Login
+        path: '/',
+        component: Layout,
+        redirect: '/dashboard',
+        children: [
+            {
+                path: 'dashboard',
+                name: 'dashboard',
+                component: () => import('@/views/index'),
+                meta: {
+                    title: store.state.settings.dashboardTitle
+                }
+            },
+            {
+                path: 'personal',
+                component: EmptyLayout,
+                redirect: '/personal/setting',
+                meta: {
+                    title: '个人中心',
+                    breadcrumb: false
+                },
+                children: [
+                    {
+                        path: 'setting',
+                        name: 'personalSetting',
+                        component: () => import('@/views/personal/setting'),
+                        meta: {
+                            title: '个人设置'
+                        }
+                    },
+                    {
+                        path: 'edit/password',
+                        name: 'personalEditPassword',
+                        component: () => import('@/views/personal/edit.password'),
+                        meta: {
+                            title: '修改密码'
+                        }
+                    }
+                ]
+            },
+            {
+                path: 'reload',
+                name: 'reload',
+                component: () => import('@/views/reload')
+            }
+        ]
     }
-    
-  ]
-})
+]
 
-router.beforeEach((to, from, next) => {
-  // 登录界面登录成功之后，会把用户信息保存在会话
-  // 存在时间为会话生命周期，页面关闭即失效。
-  let token = Cookies.get('token')
-  let userName = sessionStorage.getItem('user')
-  if (to.path === '/Login') {
-    // 如果是访问登录界面，如果用户会话信息存在，代表已登录过，跳转到主页
-    if (token) {
-      next({
-        path: '/'
-      })
-    } else {
-      next()
-    }
-  } else {
-    if (!token) {
-      // 如果访问非登录界面，且户会话信息不存在，代表未登录，则跳转到登录界面
-      console.log("登录界面")
-      next({
-        path: '/Login'
-      })
-    } else if(!store.state.menu.routeLoaded){
-      // 加载动态菜单和路由
-      addDynamicMenuAndRoutes(userName);
-      //坑：直接使用next()刷新后会一直白屏
-      next({ ...to,replace:true});
-    }
-    else{
-      next();
-    }
-  }
-})
+import MultilevelMenuExample from './modules/multilevel.menu.example'
+import BreadcrumbExample from './modules/breadcrumb.example'
 
-function addDynamicMenuAndRoutes(userName){
-  let dynamicRouters=addDynamicRoutes(menuTreeData);
-  //将路由添加到Home的children中去
-  router.options.routes[0].children=router.options.routes[0].children.concat(dynamicRouters)
-  //添加到路由（因版本问题，可能写成router.addRoutes,多一个s）
-  router.addRoute(router.options.routes[0]);
-  // 保存加载状态
-  store.commit('routeLoaded', true);
-  // 保存菜单树
-  store.commit('menus', menuTreeData);
-  console.log("路由加载");
-}
-
-function addDynamicRoutes(menuList=[],routes=[]){
-  //用于筛选出最底层的children 
-  var temp = [];
-  for (let i = 0; i < menuList.length; i++) {
-     //判断children 是否存在
-    if (menuList[i].children && menuList[i].children.length >= 1) {
-      temp = temp.concat(menuList[i].children)
-      //判断地址是否正确
-    }else if (menuList[i].route && /\S/.test(menuList[i].route)) {
-      //menuList[i].route = menuList[i].route.replace(/^\//, '');
-      // 创建路由配置
-      //踩坑记1：必须要写成@/views/${变量}
-      //踩坑记2：${变量}，这个“变量”不要用另一个变量接收，以免造成浅拷贝，使得变量的值改变
-      var reg2 = /([^/]+)$/;
-      var route = {
-        path: menuList[i].route,
-        name: menuList[i].menuName,
-        component: resolve => require([`@/views/${menuList[i].route.match(reg2)[1]}.vue`], resolve),
+// 当 children 不为空的主导航只有一项时，则隐藏
+let asyncRoutes = [
+    {
         meta: {
-          icon: menuList[i].icon,
-          index: menuList[i].menuId
-        }
-      }
-      routes.push(route);
+            title: '演示',
+            icon: 'sidebar-default'
+        },
+        children: [
+            MultilevelMenuExample,
+            BreadcrumbExample
+        ]
     }
-  }
-  //将筛选出来的children进行重复调用
-  if (temp.length >= 1) {
-    addDynamicRoutes(temp, routes)
-  } else {
-    console.log('动态路由加载...')
-    console.log(routes)
-    console.log('动态路由加载完成.')
-  }
-  return routes
+]
+
+const lastRoute = [{
+    path: '*',
+    component: () => import('@/views/404'),
+    meta: {
+        title: '404',
+        sidebar: false
+    }
+}]
+
+const router = new VueRouter({
+    routes: constantRoutes
+})
+
+// 解决路由在 push/replace 了相同地址报错的问题
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+    return originalPush.call(this, location).catch(err => err)
+}
+const originalReplace = VueRouter.prototype.replace
+VueRouter.prototype.replace = function replace(location) {
+    return originalReplace.call(this, location).catch(err => err)
 }
 
+router.beforeEach(async(to, from, next) => {
+    store.state.settings.enableProgress && NProgress.start()
+    // 已经登录，但还没根据权限动态挂载路由
+    if (store.getters['user/isLogin'] && !store.state.menu.isGenerate) {
+        /**
+         * 重置 matcher
+         * https://blog.csdn.net/baidu_28647571/article/details/101711682
+         */
+        router.matcher = new VueRouter({
+            routes: constantRoutes
+        }).matcher
+        const accessRoutes = await store.dispatch('menu/generateRoutes', {
+            asyncRoutes,
+            currentPath: to.path
+        })
+        accessRoutes.push(...lastRoute)
+        accessRoutes.forEach(route => {
+            router.addRoute(route)
+        })
+        next({ ...to, replace: true })
+    }
+    if (store.state.menu.isGenerate) {
+        store.commit('menu/setHeaderActived', to.path)
+    }
+    to.meta.title && store.commit('settings/setTitle', to.meta.title)
+    if (store.getters['user/isLogin']) {
+        if (to.name) {
+            if (to.matched.length !== 0) {
+                // 如果已登录状态下，进入登录页会强制跳转到控制台页面
+                if (to.name == 'login') {
+                    next({
+                        name: 'dashboard',
+                        replace: true
+                    })
+                } else if (!store.state.settings.enableDashboard && to.name == 'dashboard') {
+                    // 如果未开启控制台页面，则默认进入侧边栏导航第一个模块，但如果侧边栏导航没有模块，则还是进入控制台页面
+                    if (store.getters['menu/sidebarRoutes'].length > 0) {
+                        next({
+                            name: store.getters['menu/sidebarRoutes'][0].name,
+                            replace: true
+                        })
+                    }
+                }
+            } else {
+                // 如果是通过 name 跳转，并且 name 对应的路由没有权限时，需要做这步处理，手动指向到 404 页面
+                next({
+                    path: '/404'
+                })
+            }
+        }
+    } else {
+        if (to.name != 'login') {
+            next({
+                name: 'login',
+                query: {
+                    redirect: to.fullPath
+                }
+            })
+        }
+    }
+    next()
+})
+
+router.afterEach(() => {
+    store.state.settings.enableProgress && NProgress.done()
+})
 
 export default router
