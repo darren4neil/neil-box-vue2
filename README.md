@@ -1,4 +1,4 @@
-﻿# Vue2 Project
+﻿# A Vue2 Project
 ## Project setup
 ```
 npm install
