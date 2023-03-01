@@ -8,9 +8,9 @@ let globalSettings = {
      */
     openPermission: false,
     // 是否显示头部
-    showHeader: false,
+    showHeader: true,
     // 是否始终显示主侧边栏，设置为 false 且主侧边栏里只有一个导航时，主侧边栏会自动隐藏
-    alwaysShowMainSidebar: false,
+    alwaysShowMainSidebar: true,
     // 是否开启侧边栏展开收起按钮
     enableSidebarCollapse: false,
     // 侧边栏是否收起
@@ -18,15 +18,15 @@ let globalSettings = {
     // 是否显示底部版权信息，同时在路由 meta 对象里可以单独设置某个路由是否显示底部版权信息
     showCopyright: true,
     // 版权信息配置，格式为：Copyright © [dates] <company>
-    copyrightDates: '2021',
-    copyrightCompany: 'Fantastic-admin',
-    copyrightWebsite: 'https://hooray.github.io/fantastic-admin',
+    copyrightDates: '2022',
+    copyrightCompany: 'darren4neill',
+    copyrightWebsite: 'https://github.com/darren4neil/vue-template-box',
     // 是否开启导航搜索
-    enableNavSearch: true,
+    enableNavSearch: false,
     // 是否开启全屏
     enableFullscreen: false,
     // 是否开启页面刷新
-    enablePageReload: false,
+    enablePageReload: true,
     // 是否开启载入进度条
     enableProgress: true,
     // 是否开启动态标题
@@ -38,7 +38,7 @@ let globalSettings = {
     // 控制台名称
     dashboardTitle: '控制台',
     // 是否开启主题配置（建议在生产环境关闭）
-    enableThemeSetting: true
+    enableThemeSetting: false
 }
 
 export default globalSettings

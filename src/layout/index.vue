@@ -90,6 +90,7 @@
         </div>
         <Search />
         <ThemeSetting />
+        <BuyIt />
     </div>
 </template>
 
@@ -101,6 +102,7 @@ import SidebarItem from './components/SidebarItem'
 import Topbar from './components/Topbar'
 import Search from './components/Search'
 import ThemeSetting from './components/ThemeSetting'
+import BuyIt from './components/BuyIt'
 
 export default {
     name: 'Layout',
@@ -110,7 +112,8 @@ export default {
         SidebarItem,
         Topbar,
         ThemeSetting,
-        UserMenu
+        UserMenu,
+        BuyIt
     },
     provide() {
         return {
@@ -259,8 +262,8 @@ header {
         padding: inherit;
         background-color: inherit;
         .logo {
-            width: 50px;
-            height: 50px;
+            width: 25px;
+            height: 25px;
         }
         span {
             font-size: 24px;

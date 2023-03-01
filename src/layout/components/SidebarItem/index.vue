@@ -3,14 +3,14 @@
         <router-link v-if="!hasChildren" v-slot="{ href, navigate, isActive, isExactActive }" custom :to="resolvePath(item.path)">
             <a :href="isExternal(resolvePath(item.path)) ? resolvePath(item.path) : href" :class="[isActive && 'router-link-active', isExactActive && 'router-link-exact-active']" :target="isExternal(resolvePath(item.path)) ? '_blank' : '_self'" @click="navigate">
                 <el-menu-item :title="item.meta.title" :index="resolvePath(item.path)">
-                    <svg-icon v-if="item.meta.icon" :name="item.meta.icon" />
+                    <svg-icon v-if="item.meta.icon && false" :name="item.meta.icon" />
                     <span>{{ item.meta.title }}</span>
                 </el-menu-item>
             </a>
         </router-link>
         <el-submenu v-else :title="item.meta.title" :index="resolvePath(item.path)">
             <template slot="title">
-                <svg-icon v-if="item.meta.icon" :name="item.meta.icon" />
+                <svg-icon v-if="item.meta.icon && false" :name="item.meta.icon" />
                 <span>{{ item.meta.title }}</span>
             </template>
             <SidebarItem v-for="route in item.children" :key="route.path" :item="route" :base-path="resolvePath(item.path)" />
