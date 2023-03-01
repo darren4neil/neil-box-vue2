@@ -40,8 +40,8 @@ export default {
         return {
             title: process.env.VUE_APP_TITLE,
             form: {
-                account: localStorage.login_account || '',
-                password: '',
+                account: localStorage.login_account || 'admin',
+                password: 'adminadmin',
                 remember: !!localStorage.login_account
             },
             rules: {
@@ -113,7 +113,7 @@ export default {
     z-index: 0;
     width: 100%;
     height: 100%;
-    background-image: url(../assets/images/login-bg.jpg);
+    // background-image: url(../assets/images/login-bg.jpg);
     background-size: cover;
     background-position: center center;
 }
