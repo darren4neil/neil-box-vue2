@@ -35,6 +35,14 @@ export default {
                     meta: {
                         title: '分栏间隔'
                     }
+                },
+                {
+                    path: 'minxed',
+                    name: 'elementuiExampleLayoutMixed',
+                    component: () => import(/* webpackChunkName: 'element_ui_example' */ '@/views/UI/element_ui_example/layout/minxed'),
+                    meta: {
+                        title: '混合布局'
+                    }
                 }
             ]
         },
@@ -54,6 +62,52 @@ export default {
                     meta: {
                         title: '常见页面布局'
                     }
+                }
+            ]
+        },
+        {
+            path: 'form',
+            name: 'uiElementUIForm',
+            component: EmptyLayout,
+            redirect: '/elementui_example/form/radio',
+            meta: {
+                title: '表单'
+            },
+            children: [
+                {
+                    path: 'radio',
+                    name: 'uiElementUIFormRadio',
+                    component: EmptyLayout,
+                    redirect: '/elementui_example/form/radio/basic',
+                    meta: {
+                        title: '单选框'
+                    },
+                    children: [
+                        {
+                            path: 'basic',
+                            name: 'uiElementUIFormRadioBasic',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/radio/basic'),
+                            meta: {
+                                title: '基础用法'
+                            }
+                        },
+                        {
+                            path: 'disabled',
+                            name: 'uiElementUIFormRadioDisabled',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/radio/disabled'),
+                            meta: {
+                                title: '禁用状态'
+                            }
+                        },
+                        {
+                            path: 'group',
+                            name: 'uiElementUIFormRadioGroup',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/radio/group'),
+                            meta: {
+                                title: '单选框组'
+                            }
+                        }
+                    ]
                 }
             ]
         }
