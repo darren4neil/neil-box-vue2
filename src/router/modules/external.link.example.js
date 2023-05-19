@@ -10,15 +10,15 @@ export default {
     },
     children: [
         {
-            path: 'https://gitee.com/hooray/fantastic-admin',
+            path: 'https://www.baidu.com',
             meta: {
-                title: 'Gitee 仓库'
+                title: '百度一下'
             }
         },
         {
-            path: 'https://github.com/hooray/fantastic-admin',
+            path: 'https://mail.163.com',
             meta: {
-                title: 'Github 仓库'
+                title: '网易邮箱'
             }
         }
     ]

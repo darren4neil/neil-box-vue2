@@ -3,5 +3,12 @@
         <page-main>
             注意看面包屑导航的变化
         </page-main>
+        <page-main>
+            <p>这是一个段落。</p>
+            <hr>
+            <p>这是一个段落。</p>
+            <hr>
+            <p>这是一个段落。</p>
+        </page-main>
     </div>
 </template>

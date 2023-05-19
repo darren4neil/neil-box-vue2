@@ -3,5 +3,12 @@
         <page-main>
             多级导航2-2-2
         </page-main>
+        <page-main>
+            <h1>这是一个标题</h1>
+            <h2>这是一个标题</h2>
+            <h3>这是一个标题</h3>
+            <h4>这是一个标题</h4>
+            <h5>这是一个标题</h5>
+        </page-main>
     </div>
 </template>
