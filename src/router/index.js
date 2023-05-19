@@ -74,10 +74,10 @@ import ComponentBasicExample from './modules/component.basic.example'
 import ComponentExtendExample from './modules/component.extend.example'
 import PermissionExample from './modules/permission.example'
 import MockExample from './modules/mock.example'
-import VideosExample from './modules/videos.example'
+// import VideosExample from './modules/videos.example'
 import ExTernalLinkExample from './modules/external.link.example'
-import EcologyExample from './modules/ecology.example'
-import CooperationExample from './modules/cooperation.example'
+// import EcologyExample from './modules/ecology.example'
+// import CooperationExample from './modules/cooperation.example'
 
 // UI样式库
 import elementuiExample from './modules/UI/elementui.example'
@@ -108,34 +108,35 @@ let asyncRoutes = [
         children: [
             elementuiExample
         ]
-    },
-    {
-        meta: {
-            title: '教程',
-            icon: 'sidebar-videos'
-        },
-        children: [
-            ...VideosExample
-        ]
-    },
-    {
-        meta: {
-            title: '生态',
-            icon: 'sidebar-ecology'
-        },
-        children: [
-            ...EcologyExample
-        ]
-    },
-    {
-        meta: {
-            title: '战略合作',
-            icon: 'sidebar-cooperation'
-        },
-        children: [
-            ...CooperationExample
-        ]
     }
+    // ,
+    // {
+    //     meta: {
+    //         title: '教程',
+    //         icon: 'sidebar-videos'
+    //     },
+    //     children: [
+    //         ...VideosExample
+    //     ]
+    // },
+    // {
+    //     meta: {
+    //         title: '生态',
+    //         icon: 'sidebar-ecology'
+    //     },
+    //     children: [
+    //         ...EcologyExample
+    //     ]
+    // },
+    // {
+    //     meta: {
+    //         title: '战略合作',
+    //         icon: 'sidebar-cooperation'
+    //     },
+    //     children: [
+    //         ...CooperationExample
+    //     ]
+    // }
 ]
 
 const lastRoute = [{
