@@ -106,6 +106,22 @@ export default {
                             meta: {
                                 title: '单选框组'
                             }
+                        },
+                        {
+                            path: 'style',
+                            name: 'uiElementUIFormRadioStyle',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/radio/style'),
+                            meta: {
+                                title: '按钮样式'
+                            }
+                        },
+                        {
+                            path: 'border',
+                            name: 'uiElementUIFormRadioBorder',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/radio/border'),
+                            meta: {
+                                title: '带有边框'
+                            }
                         }
                     ]
                 }
