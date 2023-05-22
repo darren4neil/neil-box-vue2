@@ -124,6 +124,73 @@ export default {
                             }
                         }
                     ]
+                },
+                {
+                    path: 'checkbox',
+                    name: 'uiElementUIFormRadio',
+                    component: EmptyLayout,
+                    redirect: '/elementui_example/form/checkbox/basic',
+                    meta: {
+                        title: '复选框'
+                    },
+                    children: [
+                        {
+                            path: 'basic',
+                            name: 'uiElementUIFormCheckBoxBasic',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/basic'),
+                            meta: {
+                                title: '基础用法'
+                            }
+                        },
+                        {
+                            path: 'disable',
+                            name: 'uiElementUIFormCheckBoxDisabled',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/disable'),
+                            meta: {
+                                title: '禁用状态'
+                            }
+                        },
+                        {
+                            path: 'multi',
+                            name: 'uiElementUIFormCheckBoxMulti',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/multi'),
+                            meta: {
+                                title: '单选框组'
+                            }
+                        },
+                        {
+                            path: 'indeterminate',
+                            name: 'uiElementUIFormCheckBoxIndeterminate',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/indeterminate'),
+                            meta: {
+                                title: 'indeterminate 状态'
+                            }
+                        },
+                        {
+                            path: 'count',
+                            name: 'uiElementUIFormCheckBoxCount',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/count'),
+                            meta: {
+                                title: '单选框组'
+                            }
+                        },
+                        {
+                            path: 'style',
+                            name: 'uiElementUIFormCheckBoxStyle',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/style'),
+                            meta: {
+                                title: '数量限制'
+                            }
+                        },
+                        {
+                            path: 'border',
+                            name: 'uiElementUIFormCheckBoxBorder',
+                            component: () => import(/* webpackChunkName: 'multilevel_menu_example' */ '@/views/UI/element_ui_example/form/checkbox/border'),
+                            meta: {
+                                title: '带有边框'
+                            }
+                        }
+                    ]
                 }
             ]
         }
