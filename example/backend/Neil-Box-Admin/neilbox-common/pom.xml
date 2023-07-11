@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.neil.box</groupId>
+        <artifactId>neilbox</artifactId>
+        <version>3.6.2</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <modules>
+        <module>neilbox-common-log</module>
+        <module>neilbox-common-core</module>
+        <module>neilbox-common-redis</module>
+        <module>neilbox-common-seata</module>
+        <module>neilbox-common-swagger</module>
+        <module>neilbox-common-security</module>
+        <module>neilbox-common-datascope</module>
+        <module>neilbox-common-datasource</module>
+    </modules>
+
+    <artifactId>neilbox-common</artifactId>
+    <packaging>pom</packaging>
+
+    <description>
+        neilbox-common通用模块
+    </description>
+
+</project>

@@ -1,0 +1,2 @@
+com.neil.box.common.log.service.AsyncLogService
+com.neil.box.common.log.aspect.LogAspect
