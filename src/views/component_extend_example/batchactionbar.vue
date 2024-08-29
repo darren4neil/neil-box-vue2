@@ -21,10 +21,10 @@
                 <el-table-column prop="address" label="地址" />
             </el-table>
             <batch-action-bar :data="dataList" :selection-data="selectionDataList" @check-all="$refs.table.toggleAllSelection()" @check-null="$refs.table.clearSelection()">
-                <el-button size="small">单个批量操作按钮</el-button>
+                <el-button size="small">单个批量操作按钮按钮测试</el-button>
                 <el-button-group>
-                    <el-button size="small">批量操作按钮组1</el-button>
-                    <el-button size="small">批量操作按钮组2</el-button>
+                    <el-button size="small">批量操作按钮组1按钮测试</el-button>
+                    <el-button size="small">批量操作按钮组2v按钮测试</el-button>
                 </el-button-group>
             </batch-action-bar>
         </page-main>
