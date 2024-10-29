@@ -1,7 +1,7 @@
 <template>
     <el-row>
         <el-col :md="18">
-            <page-main class="main">
+            <page-main class="main" v-if="loaing">
                 <iframe src="//player.bilibili.com/player.html?aid=627509382&bvid=BV1Et4y1i7cJ&cid=249536051&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" />
             </page-main>
         </el-col>
