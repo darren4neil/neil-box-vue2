@@ -1,133 +1,140 @@
-package com.neil.box.system.controller;
+package org.dromara.system.controller.system;
+
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.hutool.core.convert.Convert;
+import lombok.RequiredArgsConstructor;
+import org.dromara.common.core.constant.UserConstants;
+import org.dromara.common.core.domain.R;
+import org.dromara.common.core.utils.StringUtils;
+import org.dromara.common.log.annotation.Log;
+import org.dromara.common.log.enums.BusinessType;
+import org.dromara.common.web.core.BaseController;
+import org.dromara.system.domain.bo.SysDeptBo;
+import org.dromara.system.domain.vo.SysDeptVo;
+import org.dromara.system.service.ISysDeptService;
+import org.dromara.system.service.ISysPostService;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.neil.box.common.core.constant.UserConstants;
-import com.neil.box.common.core.utils.StringUtils;
-import com.neil.box.common.core.web.controller.BaseController;
-import com.neil.box.common.core.web.domain.AjaxResult;
-import com.neil.box.common.log.annotation.Log;
-import com.neil.box.common.log.enums.BusinessType;
-import com.neil.box.common.security.annotation.RequiresPermissions;
-import com.neil.box.common.security.utils.SecurityUtils;
-import com.neil.box.system.api.domain.SysDept;
-import com.neil.box.system.service.ISysDeptService;
 
 /**
  * 部门信息
- * 
- * @author ruoyi
+ *
+ * @author Lion Li
  */
+@Validated
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/dept")
-public class SysDeptController extends BaseController
-{
-    @Autowired
-    private ISysDeptService deptService;
+@RequestMapping("/system/dept")
+public class SysDeptController extends BaseController {
+
+    private final ISysDeptService deptService;
+    private final ISysPostService postService;
 
     /**
      * 获取部门列表
      */
-    @RequiresPermissions("system:dept:list")
+    @SaCheckPermission("system:dept:list")
     @GetMapping("/list")
-    public AjaxResult list(SysDept dept)
-    {
-        List<SysDept> depts = deptService.selectDeptList(dept);
-        return success(depts);
+    public R<List<SysDeptVo>> list(SysDeptBo dept) {
+        List<SysDeptVo> depts = deptService.selectDeptList(dept);
+        return R.ok(depts);
     }
 
     /**
      * 查询部门列表（排除节点）
+     *
+     * @param deptId 部门ID
      */
-    @RequiresPermissions("system:dept:list")
+    @SaCheckPermission("system:dept:list")
     @GetMapping("/list/exclude/{deptId}")
-    public AjaxResult excludeChild(@PathVariable(value = "deptId", required = false) Long deptId)
-    {
-        List<SysDept> depts = deptService.selectDeptList(new SysDept());
-        depts.removeIf(d -> d.getDeptId().intValue() == deptId || ArrayUtils.contains(StringUtils.split(d.getAncestors(), ","), deptId + ""));
-        return success(depts);
+    public R<List<SysDeptVo>> excludeChild(@PathVariable(value = "deptId", required = false) Long deptId) {
+        List<SysDeptVo> depts = deptService.selectDeptList(new SysDeptBo());
+        depts.removeIf(d -> d.getDeptId().equals(deptId)
+            || StringUtils.splitList(d.getAncestors()).contains(Convert.toStr(deptId)));
+        return R.ok(depts);
     }
 
     /**
      * 根据部门编号获取详细信息
+     *
+     * @param deptId 部门ID
      */
-    @RequiresPermissions("system:dept:query")
+    @SaCheckPermission("system:dept:query")
     @GetMapping(value = "/{deptId}")
-    public AjaxResult getInfo(@PathVariable Long deptId)
-    {
+    public R<SysDeptVo> getInfo(@PathVariable Long deptId) {
         deptService.checkDeptDataScope(deptId);
-        return success(deptService.selectDeptById(deptId));
+        return R.ok(deptService.selectDeptById(deptId));
     }
 
     /**
      * 新增部门
      */
-    @RequiresPermissions("system:dept:add")
+    @SaCheckPermission("system:dept:add")
     @Log(title = "部门管理", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody SysDept dept)
-    {
-        if (!deptService.checkDeptNameUnique(dept))
-        {
-            return error("新增部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+    public R<Void> add(@Validated @RequestBody SysDeptBo dept) {
+        if (!deptService.checkDeptNameUnique(dept)) {
+            return R.fail("新增部门'" + dept.getDeptName() + "'失败，部门名称已存在");
         }
-        dept.setCreateBy(SecurityUtils.getUsername());
         return toAjax(deptService.insertDept(dept));
     }
 
     /**
      * 修改部门
      */
-    @RequiresPermissions("system:dept:edit")
+    @SaCheckPermission("system:dept:edit")
     @Log(title = "部门管理", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@Validated @RequestBody SysDept dept)
-    {
+    public R<Void> edit(@Validated @RequestBody SysDeptBo dept) {
         Long deptId = dept.getDeptId();
         deptService.checkDeptDataScope(deptId);
-        if (!deptService.checkDeptNameUnique(dept))
-        {
-            return error("修改部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+        if (!deptService.checkDeptNameUnique(dept)) {
+            return R.fail("修改部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+        } else if (dept.getParentId().equals(deptId)) {
+            return R.fail("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
+        } else if (StringUtils.equals(UserConstants.DEPT_DISABLE, dept.getStatus())) {
+            if (deptService.selectNormalChildrenDeptById(deptId) > 0) {
+                return R.fail("该部门包含未停用的子部门!");
+            } else if (deptService.checkDeptExistUser(deptId)) {
+                return R.fail("该部门下存在已分配用户，不能禁用!");
+            }
         }
-        else if (dept.getParentId().equals(deptId))
-        {
-            return error("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
-        }
-        else if (StringUtils.equals(UserConstants.DEPT_DISABLE, dept.getStatus()) && deptService.selectNormalChildrenDeptById(deptId) > 0)
-        {
-            return error("该部门包含未停用的子部门！");
-        }
-        dept.setUpdateBy(SecurityUtils.getUsername());
         return toAjax(deptService.updateDept(dept));
     }
 
     /**
      * 删除部门
+     *
+     * @param deptId 部门ID
      */
-    @RequiresPermissions("system:dept:remove")
+    @SaCheckPermission("system:dept:remove")
     @Log(title = "部门管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{deptId}")
-    public AjaxResult remove(@PathVariable Long deptId)
-    {
-        if (deptService.hasChildByDeptId(deptId))
-        {
-            return warn("存在下级部门,不允许删除");
+    public R<Void> remove(@PathVariable Long deptId) {
+        if (deptService.hasChildByDeptId(deptId)) {
+            return R.warn("存在下级部门,不允许删除");
         }
-        if (deptService.checkDeptExistUser(deptId))
-        {
-            return warn("部门存在用户,不允许删除");
+        if (deptService.checkDeptExistUser(deptId)) {
+            return R.warn("部门存在用户,不允许删除");
+        }
+        if (postService.countPostByDeptId(deptId) > 0) {
+            return R.warn("部门存在岗位,不允许删除");
         }
         deptService.checkDeptDataScope(deptId);
         return toAjax(deptService.deleteDeptById(deptId));
     }
+
+    /**
+     * 获取部门选择框列表
+     *
+     * @param deptIds 部门ID串
+     */
+    @SaCheckPermission("system:dept:query")
+    @GetMapping("/optionselect")
+    public R<List<SysDeptVo>> optionselect(@RequestParam(required = false) Long[] deptIds) {
+        return R.ok(deptService.selectDeptByIds(deptIds == null ? null : List.of(deptIds)));
+    }
+
 }

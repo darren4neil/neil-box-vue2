@@ -1,122 +1,123 @@
-package com.neil.box.system.controller;
+package org.dromara.system.controller.system;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.hutool.core.util.ObjectUtil;
+import org.dromara.common.log.annotation.Log;
+import org.dromara.common.web.core.BaseController;
+import org.dromara.common.mybatis.core.page.PageQuery;
+import org.dromara.common.core.domain.R;
+import org.dromara.common.mybatis.core.page.TableDataInfo;
+import org.dromara.common.log.enums.BusinessType;
+import org.dromara.common.excel.utils.ExcelUtil;
+import org.dromara.system.domain.bo.SysDictDataBo;
+import org.dromara.system.domain.vo.SysDictDataVo;
+import org.dromara.system.service.ISysDictDataService;
+import org.dromara.system.service.ISysDictTypeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.neil.box.common.core.utils.StringUtils;
-import com.neil.box.common.core.utils.poi.ExcelUtil;
-import com.neil.box.common.core.web.controller.BaseController;
-import com.neil.box.common.core.web.domain.AjaxResult;
-import com.neil.box.common.core.web.page.TableDataInfo;
-import com.neil.box.common.log.annotation.Log;
-import com.neil.box.common.log.enums.BusinessType;
-import com.neil.box.common.security.annotation.RequiresPermissions;
-import com.neil.box.common.security.utils.SecurityUtils;
-import com.neil.box.system.api.domain.SysDictData;
-import com.neil.box.system.service.ISysDictDataService;
-import com.neil.box.system.service.ISysDictTypeService;
 
 /**
  * 数据字典信息
- * 
- * @author ruoyi
+ *
+ * @author Lion Li
  */
+@Validated
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/dict/data")
-public class SysDictDataController extends BaseController
-{
-    @Autowired
-    private ISysDictDataService dictDataService;
-    
-    @Autowired
-    private ISysDictTypeService dictTypeService;
+@RequestMapping("/system/dict/data")
+public class SysDictDataController extends BaseController {
 
-    @RequiresPermissions("system:dict:list")
+    private final ISysDictDataService dictDataService;
+    private final ISysDictTypeService dictTypeService;
+
+    /**
+     * 查询字典数据列表
+     */
+    @SaCheckPermission("system:dict:list")
     @GetMapping("/list")
-    public TableDataInfo list(SysDictData dictData)
-    {
-        startPage();
-        List<SysDictData> list = dictDataService.selectDictDataList(dictData);
-        return getDataTable(list);
+    public TableDataInfo<SysDictDataVo> list(SysDictDataBo dictData, PageQuery pageQuery) {
+        return dictDataService.selectPageDictDataList(dictData, pageQuery);
     }
 
+    /**
+     * 导出字典数据列表
+     */
     @Log(title = "字典数据", businessType = BusinessType.EXPORT)
-    @RequiresPermissions("system:dict:export")
+    @SaCheckPermission("system:dict:export")
     @PostMapping("/export")
-    public void export(HttpServletResponse response, SysDictData dictData)
-    {
-        List<SysDictData> list = dictDataService.selectDictDataList(dictData);
-        ExcelUtil<SysDictData> util = new ExcelUtil<SysDictData>(SysDictData.class);
-        util.exportExcel(response, list, "字典数据");
+    public void export(SysDictDataBo dictData, HttpServletResponse response) {
+        List<SysDictDataVo> list = dictDataService.selectDictDataList(dictData);
+        ExcelUtil.exportExcel(list, "字典数据", SysDictDataVo.class, response);
     }
 
     /**
      * 查询字典数据详细
+     *
+     * @param dictCode 字典code
      */
-    @RequiresPermissions("system:dict:query")
+    @SaCheckPermission("system:dict:query")
     @GetMapping(value = "/{dictCode}")
-    public AjaxResult getInfo(@PathVariable Long dictCode)
-    {
-        return success(dictDataService.selectDictDataById(dictCode));
+    public R<SysDictDataVo> getInfo(@PathVariable Long dictCode) {
+        return R.ok(dictDataService.selectDictDataById(dictCode));
     }
 
     /**
      * 根据字典类型查询字典数据信息
+     *
+     * @param dictType 字典类型
      */
     @GetMapping(value = "/type/{dictType}")
-    public AjaxResult dictType(@PathVariable String dictType)
-    {
-        List<SysDictData> data = dictTypeService.selectDictDataByType(dictType);
-        if (StringUtils.isNull(data))
-        {
-            data = new ArrayList<SysDictData>();
+    public R<List<SysDictDataVo>> dictType(@PathVariable String dictType) {
+        List<SysDictDataVo> data = dictTypeService.selectDictDataByType(dictType);
+        if (ObjectUtil.isNull(data)) {
+            data = new ArrayList<>();
         }
-        return success(data);
+        return R.ok(data);
     }
 
     /**
      * 新增字典类型
      */
-    @RequiresPermissions("system:dict:add")
+    @SaCheckPermission("system:dict:add")
     @Log(title = "字典数据", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody SysDictData dict)
-    {
-        dict.setCreateBy(SecurityUtils.getUsername());
-        return toAjax(dictDataService.insertDictData(dict));
+    public R<Void> add(@Validated @RequestBody SysDictDataBo dict) {
+        if (!dictDataService.checkDictDataUnique(dict)) {
+            return R.fail("新增字典数据'" + dict.getDictValue() + "'失败，字典键值已存在");
+        }
+        dictDataService.insertDictData(dict);
+        return R.ok();
     }
 
     /**
      * 修改保存字典类型
      */
-    @RequiresPermissions("system:dict:edit")
+    @SaCheckPermission("system:dict:edit")
     @Log(title = "字典数据", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@Validated @RequestBody SysDictData dict)
-    {
-        dict.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(dictDataService.updateDictData(dict));
+    public R<Void> edit(@Validated @RequestBody SysDictDataBo dict) {
+        if (!dictDataService.checkDictDataUnique(dict)) {
+            return R.fail("修改字典数据'" + dict.getDictValue() + "'失败，字典键值已存在");
+        }
+        dictDataService.updateDictData(dict);
+        return R.ok();
     }
 
     /**
      * 删除字典类型
+     *
+     * @param dictCodes 字典code串
      */
-    @RequiresPermissions("system:dict:remove")
+    @SaCheckPermission("system:dict:remove")
     @Log(title = "字典类型", businessType = BusinessType.DELETE)
     @DeleteMapping("/{dictCodes}")
-    public AjaxResult remove(@PathVariable Long[] dictCodes)
-    {
+    public R<Void> remove(@PathVariable Long[] dictCodes) {
         dictDataService.deleteDictDataByIds(dictCodes);
-        return success();
+        return R.ok();
     }
 }

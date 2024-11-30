@@ -51,7 +51,8 @@ public class SysNoticeController extends BaseController
     @RequiresPermissions("system:notice:query")
     @GetMapping(value = "/{noticeId}")
     public AjaxResult getInfo(@PathVariable Long noticeId)
-    {
+    {List<SysLogininforVo> list = logininforService.selectLogininforList(logininfor);
+        
         return success(noticeService.selectNoticeById(noticeId));
     }
 
@@ -63,6 +64,10 @@ public class SysNoticeController extends BaseController
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysNotice notice)
     {
+		String loginName = CacheConstants.PWD_ERR_CNT_KEY + userName;
+        if (RedisUtils.hasKey(loginName)) {
+            RedisUtils.deleteObject(loginName);
+        }
         notice.setCreateBy(SecurityUtils.getUsername());
         return toAjax(noticeService.insertNotice(notice));
     }
